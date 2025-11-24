@@ -45,10 +45,10 @@
       <HintPath>packages\Costura.Fody.6.0.0\lib\netstandard2.0\Costura.dll</HintPath>
     </Reference>
     <Reference Include="Guna.UI2">
-      <HintPath>..\..\..\..\DLLs\CSharpBeautifulThemes\Libraries\Guna.UI2\Guna.UI2.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\DLLs\CSharpBeautifulThemes\Libraries\Guna.UI2\Guna.UI2.dll</HintPath>
     </Reference>
     <Reference Include="MetroSuite 2.0">
-      <HintPath>..\..\..\..\DLLs\CSharpBeautifulThemes\Libraries\MetroSuite\MetroSuite 2.0.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\DLLs\CSharpBeautifulThemes\Libraries\MetroSuite\MetroSuite 2.0.dll</HintPath>
     </Reference>
     <Reference Include="PeNet, Version=5.1.0.0, Culture=neutral, PublicKeyToken=6cf2bfba59bcfb3f, processorArchitecture=MSIL">
       <HintPath>packages\PeNet.5.1.0\lib\net48\PeNet.dll</HintPath>
