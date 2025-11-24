@@ -31,6 +31,7 @@
             this.guna2ComboBox2 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.guna2ComboBox3 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.guna2ComboBox4 = new Guna.UI2.WinForms.Guna2ComboBox();
+            this.guna2ComboBox5 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.SuspendLayout();
             // 
             // guna2ControlBox1
@@ -261,7 +262,9 @@
             this.guna2ComboBox2.Items.AddRange(new object[] {
             "CreateRemoteThread",
             "RtlCreateUserThread",
-            "NtCreateThreadEx"});
+            "NtCreateThreadEx",
+            "NtQueueApcThread",
+            "NtQueueApcThreadEx"});
             this.guna2ComboBox2.Location = new System.Drawing.Point(469, 516);
             this.guna2ComboBox2.Name = "guna2ComboBox2";
             this.guna2ComboBox2.Size = new System.Drawing.Size(201, 36);
@@ -305,12 +308,40 @@
             this.guna2ComboBox4.HoverState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
             this.guna2ComboBox4.ItemHeight = 30;
             this.guna2ComboBox4.Items.AddRange(new object[] {
-            "KERNEL32 Execution",
-            "NTDLL Execution"});
+            "WriteProcessMemory",
+            "NtWriteVirtualMemory",
+            "ZwWriteVirtualMemory",
+            "NtCreateSection + NtMapViewOfSection",
+            "CreateFileMapping + MapViewOfFile + NtMapViewOfSection"});
             this.guna2ComboBox4.Location = new System.Drawing.Point(31, 569);
             this.guna2ComboBox4.Name = "guna2ComboBox4";
-            this.guna2ComboBox4.Size = new System.Drawing.Size(639, 36);
+            this.guna2ComboBox4.Size = new System.Drawing.Size(430, 36);
             this.guna2ComboBox4.TabIndex = 12;
+            // 
+            // guna2ComboBox5
+            // 
+            this.guna2ComboBox5.BackColor = System.Drawing.Color.Transparent;
+            this.guna2ComboBox5.BorderRadius = 2;
+            this.guna2ComboBox5.BorderThickness = 2;
+            this.guna2ComboBox5.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.guna2ComboBox5.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.guna2ComboBox5.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.guna2ComboBox5.FocusedColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
+            this.guna2ComboBox5.FocusedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
+            this.guna2ComboBox5.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.guna2ComboBox5.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.guna2ComboBox5.HoverState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
+            this.guna2ComboBox5.ItemHeight = 30;
+            this.guna2ComboBox5.Items.AddRange(new object[] {
+            "VirtualAllocEx",
+            "NtAllocateVirtualMemory",
+            "NtCreateSection",
+            "CreateFileMapping",
+            "VirtualAlloc2"});
+            this.guna2ComboBox5.Location = new System.Drawing.Point(469, 569);
+            this.guna2ComboBox5.Name = "guna2ComboBox5";
+            this.guna2ComboBox5.Size = new System.Drawing.Size(201, 36);
+            this.guna2ComboBox5.TabIndex = 13;
             // 
             // MainForm
             // 
@@ -321,6 +352,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(695, 682);
+            this.Controls.Add(this.guna2ComboBox5);
             this.Controls.Add(this.guna2ComboBox4);
             this.Controls.Add(this.guna2ComboBox3);
             this.Controls.Add(this.guna2ComboBox2);
@@ -363,4 +395,5 @@
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox2;
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox3;
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox4;
+    private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox5;
 }

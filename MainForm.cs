@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -26,13 +25,13 @@ public partial class MainForm : MetroForm
     private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, uint lpNumberOfBytesWritten);
 
     [DllImport("kernel32.dll")]
-    private static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
-
-    [DllImport("kernel32.dll")]
     private static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-    
+
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern IntPtr NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, UInt32 NumberOfBytesToWrite, ref UInt32 NumberOfBytesWritten);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern IntPtr ZwWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, UInt32 NumberOfBytesToWrite, ref UInt32 NumberOfBytesWritten);
 
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern IntPtr RtlCreateUserThread(IntPtr processHandle, IntPtr threadSecurity, bool createSuspended, Int32 stackZeroBits, IntPtr stackReserved, IntPtr stackCommit, IntPtr startAddress, IntPtr parameter, ref IntPtr threadHandle, IntPtr clientId);
@@ -40,9 +39,65 @@ public partial class MainForm : MetroForm
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern IntPtr NtCreateThreadEx(ref IntPtr threadHandle, UInt32 desiredAccess, IntPtr objectAttributes, IntPtr processHandle, IntPtr startAddress, IntPtr parameter, bool inCreateSuspended, Int32 stackZeroBits, Int32 sizeOfStack, Int32 maximumStackSize, IntPtr attributeList);
 
-    private uint MEM_COMMIT = 0x00001000;
-    private uint MEM_RESERVE = 0x00002000;
-    private uint PAGE_READWRITE = 4;
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern int NtQueueApcThread(IntPtr ThreadHandle, IntPtr ApcRoutine, IntPtr ApcArgument1, IntPtr ApcArgument2, IntPtr ApcArgument3);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern int NtQueueApcThreadEx(IntPtr ThreadHandle, IntPtr UserApcReserveHandle, IntPtr ApcRoutine, IntPtr ApcArgument1, IntPtr ApcArgument2, IntPtr ApcArgument3);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle,uint dwThreadId);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr hObject);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern int NtAllocateVirtualMemory(IntPtr ProcessHandle, ref IntPtr BaseAddress, IntPtr ZeroBits, ref ulong RegionSize, uint AllocationType, uint Protect);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtCreateSection(out IntPtr SectionHandle, uint DesiredAccess, IntPtr ObjectAttributes, ref long MaximumSize, uint SectionPageProtection, uint AllocationAttributes, IntPtr FileHandle);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtMapViewOfSection(IntPtr SectionHandle, IntPtr ProcessHandle, out IntPtr BaseAddress, IntPtr ZeroBits, IntPtr CommitSize, out long SectionOffset, out ulong ViewSize, uint InheritDisposition, uint AllocationType, uint Win32Protect);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr CreateFileMapping( IntPtr hFile, IntPtr lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumberOfBytesToMap);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool DuplicateHandle(IntPtr hSourceProcessHandle, IntPtr hSourceHandle, IntPtr hTargetProcessHandle, out IntPtr lpTargetHandle, uint dwDesiredAccess, bool bInheritHandle, uint dwOptions);
+
+    [DllImport("ntdll")]
+    private static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
+
+    [Flags]
+    public enum AllocationType : uint
+    {
+        MEM_COMMIT = 0x1000,
+        MEM_RESERVE = 0x2000
+    }
+
+    [Flags]
+    public enum MemoryProtection : uint
+    {
+        PAGE_READWRITE = 0x04
+    }
+
+    [DllImport("kernelbase.dll", SetLastError = true)]
+    private static extern IntPtr VirtualAlloc2(IntPtr processHandle, IntPtr baseAddress, UIntPtr size, AllocationType allocationType, MemoryProtection protection, IntPtr extendedParameters, IntPtr parameterCount);
+
+    private const uint MEM_COMMIT = 0x00001000;
+    private const uint MEM_RESERVE = 0x00002000;
+    private const uint PAGE_READWRITE = 4;
+    private const uint SECTION_ALL_ACCESS = 0x10000000;
+    private const uint SEC_COMMIT = 0x8000000;
+    private const uint ViewShare = 1;
+    private const uint FILE_MAP_WRITE = 0x0002;
 
     private List<InjectorProcess> _injectorProcesses;
 
@@ -64,6 +119,7 @@ public partial class MainForm : MetroForm
         guna2ComboBox2.SelectedIndex = 0;
         guna2ComboBox3.SelectedIndex = 0;
         guna2ComboBox4.SelectedIndex = 0;
+        guna2ComboBox5.SelectedIndex = 0;
     }
 
     public void CheckerThread()
@@ -166,7 +222,14 @@ public partial class MainForm : MetroForm
             {
                 uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 IntPtr processHandle = OpenProcess(0x001F0FFF, false, (int)processId);
+
                 string dllPath = guna2TextBox2.Text;
+
+                byte[] dllBytes = guna2ComboBox1.SelectedIndex == 0 ?
+                    Encoding.ASCII.GetBytes(dllPath + "\0") :
+                     Encoding.Unicode.GetBytes(dllPath + "\0");
+
+                uint dllSize = (uint)dllBytes.Length;
 
                 IntPtr remoteThread = new IntPtr(0);
                 IntPtr loadLibraryAddress = IntPtr.Zero;
@@ -181,16 +244,124 @@ public partial class MainForm : MetroForm
                         break;
                 }
 
-                IntPtr allocatedMemoryAddress = VirtualAllocEx(processHandle, IntPtr.Zero, (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                IntPtr allocatedMemoryAddress = IntPtr.Zero;
+                bool memoryAlreadyFilled = false;
 
-                if (guna2ComboBox4.SelectedIndex == 0)
+                if (guna2ComboBox4.SelectedIndex == 3)
                 {
-                    WriteProcessMemory(processHandle, allocatedMemoryAddress, Encoding.Default.GetBytes(dllPath), (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), 0);
+                    long maxSize = dllSize;
+                    IntPtr sectionHandle;
+
+                    int status = NtCreateSection(out sectionHandle, SECTION_ALL_ACCESS, IntPtr.Zero, ref maxSize, PAGE_READWRITE, SEC_COMMIT, IntPtr.Zero);
+
+                    IntPtr localBase;
+                    long offset = 0;
+                    ulong viewSize = 0;
+
+                    status = NtMapViewOfSection(sectionHandle, (IntPtr)(-1), out localBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+
+                    Marshal.Copy(dllBytes, 0, localBase, dllBytes.Length);
+
+                    IntPtr remoteBase;
+                    offset = 0;
+                    viewSize = 0;
+
+                    status = NtMapViewOfSection(sectionHandle, processHandle, out remoteBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+
+                    allocatedMemoryAddress = remoteBase;
+                    memoryAlreadyFilled = true;
+
+                    NtUnmapViewOfSection((IntPtr)(-1), localBase);
+                    CloseHandle(sectionHandle);
+                }
+                else if (guna2ComboBox4.SelectedIndex == 4)
+                {
+                    IntPtr hSection = CreateFileMapping(new IntPtr(-1), IntPtr.Zero, PAGE_READWRITE, 0, dllSize, null);
+                    IntPtr localView = MapViewOfFile( hSection, FILE_MAP_WRITE, 0, 0, (UIntPtr)dllSize );
+                    Marshal.Copy(dllBytes, 0, localView, dllBytes.Length);
+
+                    long offset = 0;
+                    ulong viewSize = 0;
+                    IntPtr remoteBase;
+
+                    int status = NtMapViewOfSection(hSection, processHandle, out remoteBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+
+                    allocatedMemoryAddress = remoteBase;
+                    memoryAlreadyFilled = true;
+
+                    UnmapViewOfFile(localView);
+                    CloseHandle(hSection);
                 }
                 else
                 {
-                    uint bytesWritten = 0;
-                    NtWriteVirtualMemory(processHandle, allocatedMemoryAddress, Encoding.Default.GetBytes(dllPath), (uint)((dllPath.Length + 1) * Marshal.SizeOf(typeof(char))), ref bytesWritten);
+                    if (guna2ComboBox5.SelectedIndex == 0)
+                    {
+                        allocatedMemoryAddress = VirtualAllocEx(processHandle, IntPtr.Zero, dllSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                    }
+                    else if (guna2ComboBox5.SelectedIndex == 1)
+                    {
+                        ulong newDllSize = (ulong)dllSize;
+                        NtAllocateVirtualMemory(processHandle, ref allocatedMemoryAddress, IntPtr.Zero, ref newDllSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                    }
+                    else if (guna2ComboBox5.SelectedIndex == 2)
+                    {
+                        long maxSize = dllSize;
+                        IntPtr sectionHandle;
+
+                        int status = NtCreateSection(out sectionHandle, SECTION_ALL_ACCESS, IntPtr.Zero, ref maxSize, PAGE_READWRITE, SEC_COMMIT, IntPtr.Zero);
+
+                        IntPtr localBase;
+                        long offset = 0;
+                        ulong viewSize = 0;
+
+                        status = NtMapViewOfSection(sectionHandle, (IntPtr)(-1), out localBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+
+                        Marshal.Copy(dllBytes, 0, localBase, dllBytes.Length);
+
+                        IntPtr remoteBase;
+                        offset = 0;
+                        viewSize = 0;
+
+                        status = NtMapViewOfSection(sectionHandle, processHandle, out remoteBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+                        allocatedMemoryAddress = remoteBase;
+                    }
+                    else if (guna2ComboBox5.SelectedIndex == 3)
+                    {
+                        IntPtr hSection = CreateFileMapping(new IntPtr(-1), IntPtr.Zero, PAGE_READWRITE, 0, dllSize, null);
+                        IntPtr localView = MapViewOfFile(hSection, FILE_MAP_WRITE, 0, 0, (UIntPtr)dllSize);
+                        Marshal.Copy(dllBytes, 0, localView, dllBytes.Length);
+
+                        long offset = 0;
+                        ulong viewSize = 0;
+                        IntPtr remoteBase;
+                        int status = NtMapViewOfSection(hSection, processHandle, out remoteBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
+
+                        allocatedMemoryAddress = remoteBase;
+                        UnmapViewOfFile(localView);
+                        CloseHandle(hSection);
+                    }
+                    else if (guna2ComboBox5.SelectedIndex == 4)
+                    {
+                        allocatedMemoryAddress = VirtualAlloc2(processHandle, IntPtr.Zero, (UIntPtr)dllSize, AllocationType.MEM_RESERVE | AllocationType.MEM_COMMIT, MemoryProtection.PAGE_READWRITE, IntPtr.Zero, IntPtr.Zero);
+                    }
+                }
+
+                if (!memoryAlreadyFilled)
+                {
+                    if (guna2ComboBox4.SelectedIndex == 0)
+                    {
+                        WriteProcessMemory(processHandle, allocatedMemoryAddress, dllBytes, dllSize, 0);
+                    }
+                    else if (guna2ComboBox4.SelectedIndex == 1)
+                    {
+                        uint bytesWritten = 0;
+                        NtWriteVirtualMemory(processHandle, allocatedMemoryAddress, dllBytes, dllSize, ref bytesWritten);
+                    }
+                    else if (guna2ComboBox4.SelectedIndex == 2)
+                    {
+                        uint bytesWritten = 0;
+                        ZwWriteVirtualMemory(processHandle, allocatedMemoryAddress, dllBytes, dllSize, ref bytesWritten);
+                    }
                 }
 
                 switch (guna2ComboBox2.SelectedIndex)
@@ -204,7 +375,44 @@ public partial class MainForm : MetroForm
                     case 2:
                         NtCreateThreadEx(ref remoteThread, 0x1FFFFF, IntPtr.Zero, processHandle, loadLibraryAddress, allocatedMemoryAddress, false, 0, 0, 0, IntPtr.Zero);
                         break;
+                    case 3:
+                        foreach (ProcessThread t in Process.GetProcessById((int) processId).Threads)
+                        {
+                            IntPtr hThread = OpenThread(0x0010, false, (uint)t.Id);
+
+                            if (hThread == IntPtr.Zero)
+                            {
+                                continue;
+                            }
+
+                            int status = NtQueueApcThread(
+                                hThread,
+                                loadLibraryAddress,
+                                allocatedMemoryAddress,
+                                IntPtr.Zero,
+                                IntPtr.Zero
+                            );
+
+                            CloseHandle(hThread);
+                        }
+                        break;
+                    case 4:
+                        foreach (ProcessThread t in Process.GetProcessById((int)processId).Threads)
+                        {
+                            IntPtr hThread = OpenThread(0x1FFFFF, false, (uint)t.Id);
+
+                            if (hThread == IntPtr.Zero)
+                            {
+                                continue;
+                            }
+
+                            int status = NtQueueApcThreadEx(hThread, IntPtr.Zero, loadLibraryAddress, allocatedMemoryAddress, IntPtr.Zero, IntPtr.Zero);
+                            CloseHandle(hThread);
+                        }
+                        break;
                 }
+
+                CloseHandle(processHandle);                
             }
             else if (guna2ComboBox3.SelectedIndex == 1)
             {
@@ -213,7 +421,7 @@ public partial class MainForm : MetroForm
 
             MessageBox.Show("Succesfully injected!", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        catch
+        catch (Exception ex)
         {
             MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -225,8 +433,11 @@ public partial class MainForm : MetroForm
 
         if (guna2ComboBox3.SelectedIndex == 0)
         {
-            guna2ComboBox4.Items.Add("KERNEL32 Execution");
-            guna2ComboBox4.Items.Add("NTDLL Execution");
+            guna2ComboBox4.Items.Add("WriteProcessMemory");
+            guna2ComboBox4.Items.Add("NtWriteVirtualMemory");
+            guna2ComboBox4.Items.Add("ZwWriteVirtualMemory");
+            guna2ComboBox4.Items.Add("NtCreateSection + NtMapViewOfSection");
+            guna2ComboBox4.Items.Add("CreateFileMapping + MapViewOfFile + NtMapViewOfSection");
         }
         else if (guna2ComboBox3.SelectedIndex == 1)
         {
