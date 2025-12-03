@@ -75,6 +75,24 @@ public partial class MainForm : MetroForm
     [DllImport("ntdll")]
     private static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
 
+    [DllImport("kernelbase.dll", SetLastError = true)]
+    private static extern IntPtr VirtualAlloc2(IntPtr processHandle, IntPtr baseAddress, UIntPtr size, AllocationType allocationType, MemoryProtection protection, IntPtr extendedParameters, IntPtr parameterCount);
+
+    [DllImport("ManualMapper.dll", EntryPoint = "ManualMapDLL", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern int ManualMapDLL(uint processID, string dllPath);
+
+    [DllImport("ThreadHijacker.dll", EntryPoint = "ThreadHijack", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern int ThreadHijack(uint processID, string dllPath);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern int NtOpenProcess(out IntPtr ProcessHandle, UInt32 DesiredAccess, ref OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern uint NtOpenThread(out IntPtr ThreadHandle, uint DesiredAccess, ref OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    private static extern int NtClose(IntPtr Handle);
+
     [Flags]
     public enum AllocationType : uint
     {
@@ -88,8 +106,23 @@ public partial class MainForm : MetroForm
         PAGE_READWRITE = 0x04
     }
 
-    [DllImport("kernelbase.dll", SetLastError = true)]
-    private static extern IntPtr VirtualAlloc2(IntPtr processHandle, IntPtr baseAddress, UIntPtr size, AllocationType allocationType, MemoryProtection protection, IntPtr extendedParameters, IntPtr parameterCount);
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CLIENT_ID
+    {
+        public IntPtr UniqueProcess;
+        public IntPtr UniqueThread;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct OBJECT_ATTRIBUTES
+    {
+        public UInt32 Length;
+        public IntPtr RootDirectory;
+        public IntPtr ObjectName;
+        public UInt32 Attributes;
+        public IntPtr SecurityDescriptor;
+        public IntPtr SecurityQualityOfService;
+    }
 
     private const uint MEM_COMMIT = 0x00001000;
     private const uint MEM_RESERVE = 0x00002000;
@@ -98,6 +131,7 @@ public partial class MainForm : MetroForm
     private const uint SEC_COMMIT = 0x8000000;
     private const uint ViewShare = 1;
     private const uint FILE_MAP_WRITE = 0x0002;
+    private const uint STATUS_SUCCESS = 0x00000000;
 
     private List<InjectorProcess> _injectorProcesses;
 
@@ -115,11 +149,80 @@ public partial class MainForm : MetroForm
         checkerThread.Priority = ThreadPriority.Highest;
         checkerThread.Start();
 
-        guna2ComboBox1.SelectedIndex = 0;
-        guna2ComboBox2.SelectedIndex = 0;
+        guna2ComboBox1.SelectedIndex = 1;
+        guna2ComboBox2.SelectedIndex = 4;
         guna2ComboBox3.SelectedIndex = 0;
-        guna2ComboBox4.SelectedIndex = 0;
-        guna2ComboBox5.SelectedIndex = 0;
+        guna2ComboBox4.SelectedIndex = 3;
+        guna2ComboBox5.SelectedIndex = 2;
+        guna2ComboBox6.SelectedIndex = 1;
+    }
+
+    public static void InitializeObjectAttributes(ref OBJECT_ATTRIBUTES attributes, UInt32 attributesValue)
+    {
+        attributes.Length = (uint)Marshal.SizeOf(attributes);
+        attributes.RootDirectory = IntPtr.Zero;
+        attributes.ObjectName = IntPtr.Zero;
+        attributes.Attributes = attributesValue;
+        attributes.SecurityDescriptor = IntPtr.Zero;
+        attributes.SecurityQualityOfService = IntPtr.Zero;
+    }
+
+    public IntPtr OpenProcessNt(int processId, UInt32 desiredAccess)
+    {
+        CLIENT_ID cid = new CLIENT_ID
+        {
+            UniqueProcess = new IntPtr(processId),
+            UniqueThread = IntPtr.Zero
+        };
+
+        OBJECT_ATTRIBUTES objAttr = new OBJECT_ATTRIBUTES();
+        InitializeObjectAttributes(ref objAttr, 0);
+
+        IntPtr hProcess = IntPtr.Zero;
+        int status = NtOpenProcess(out hProcess, desiredAccess, ref objAttr, ref cid);
+
+        if (status != STATUS_SUCCESS)
+        {
+            return IntPtr.Zero;
+        }
+
+        return hProcess;
+    }
+
+    public bool CloseHandleNt(IntPtr handle)
+    {
+        if (handle == IntPtr.Zero)
+        {
+            return true;
+        }
+
+        int status = NtClose(handle);
+        return status == STATUS_SUCCESS;
+    }
+
+    public IntPtr NtOpenThreadReplacement(int targetProcessId, int targetThreadId, uint desiredAccess)
+    {
+        IntPtr hThread = IntPtr.Zero;
+
+        CLIENT_ID clientId = new CLIENT_ID
+        {
+            UniqueProcess = new IntPtr(targetProcessId),
+            UniqueThread = new IntPtr(targetThreadId)
+        };
+
+        OBJECT_ATTRIBUTES objAttributes = new OBJECT_ATTRIBUTES
+        {
+            Length = (uint) Marshal.SizeOf(typeof(OBJECT_ATTRIBUTES)),
+        };
+
+        uint status = NtOpenThread(out hThread, desiredAccess, ref objAttributes, ref clientId);
+
+        if (status != STATUS_SUCCESS || hThread == IntPtr.Zero)
+        {
+            return IntPtr.Zero;
+        }
+
+        return hThread;
     }
 
     public void CheckerThread()
@@ -221,13 +324,22 @@ public partial class MainForm : MetroForm
             if (guna2ComboBox3.SelectedIndex == 0)
             {
                 uint processId = uint.Parse(listView1.SelectedItems[0].Text);
-                IntPtr processHandle = OpenProcess(0x001F0FFF, false, (int)processId);
+                IntPtr processHandle = IntPtr.Zero;
+
+                if (guna2ComboBox6.SelectedIndex == 0)
+                {
+                    processHandle = OpenProcess(0x001F0FFF, false, (int)processId);
+                }
+                else if (guna2ComboBox6.SelectedIndex == 1)
+                {
+                    processHandle = OpenProcessNt((int)processId, 0x001F0FFF);
+                }
 
                 string dllPath = guna2TextBox2.Text;
 
                 byte[] dllBytes = guna2ComboBox1.SelectedIndex == 0 ?
                     Encoding.ASCII.GetBytes(dllPath + "\0") :
-                     Encoding.Unicode.GetBytes(dllPath + "\0");
+                    Encoding.Unicode.GetBytes(dllPath + "\0");
 
                 uint dllSize = (uint)dllBytes.Length;
 
@@ -272,7 +384,15 @@ public partial class MainForm : MetroForm
                     memoryAlreadyFilled = true;
 
                     NtUnmapViewOfSection((IntPtr)(-1), localBase);
-                    CloseHandle(sectionHandle);
+
+                    if (guna2ComboBox6.SelectedIndex == 0)
+                    {
+                        CloseHandle(sectionHandle);
+                    }
+                    else if (guna2ComboBox6.SelectedIndex == 1)
+                    {
+                        CloseHandleNt(sectionHandle);
+                    }
                 }
                 else if (guna2ComboBox4.SelectedIndex == 4)
                 {
@@ -290,7 +410,15 @@ public partial class MainForm : MetroForm
                     memoryAlreadyFilled = true;
 
                     UnmapViewOfFile(localView);
-                    CloseHandle(hSection);
+
+                    if (guna2ComboBox6.SelectedIndex == 0)
+                    {
+                        CloseHandle(hSection);
+                    }
+                    else if (guna2ComboBox6.SelectedIndex == 1)
+                    {
+                        CloseHandleNt(hSection);
+                    }
                 }
                 else
                 {
@@ -315,7 +443,6 @@ public partial class MainForm : MetroForm
                         ulong viewSize = 0;
 
                         status = NtMapViewOfSection(sectionHandle, (IntPtr)(-1), out localBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
-
                         Marshal.Copy(dllBytes, 0, localBase, dllBytes.Length);
 
                         IntPtr remoteBase;
@@ -324,6 +451,15 @@ public partial class MainForm : MetroForm
 
                         status = NtMapViewOfSection(sectionHandle, processHandle, out remoteBase, IntPtr.Zero, IntPtr.Zero, out offset, out viewSize, ViewShare, 0, PAGE_READWRITE);
                         allocatedMemoryAddress = remoteBase;
+
+                        if (guna2ComboBox6.SelectedIndex == 0)
+                        {
+                            CloseHandle(sectionHandle);
+                        }
+                        else if (guna2ComboBox6.SelectedIndex == 1)
+                        {
+                            CloseHandleNt(sectionHandle);
+                        }
                     }
                     else if (guna2ComboBox5.SelectedIndex == 3)
                     {
@@ -338,7 +474,15 @@ public partial class MainForm : MetroForm
 
                         allocatedMemoryAddress = remoteBase;
                         UnmapViewOfFile(localView);
-                        CloseHandle(hSection);
+
+                        if (guna2ComboBox6.SelectedIndex == 0)
+                        {
+                            CloseHandle(hSection);
+                        }
+                        else if (guna2ComboBox6.SelectedIndex == 1)
+                        {
+                            CloseHandleNt(hSection);
+                        }
                     }
                     else if (guna2ComboBox5.SelectedIndex == 4)
                     {
@@ -378,28 +522,47 @@ public partial class MainForm : MetroForm
                     case 3:
                         foreach (ProcessThread t in Process.GetProcessById((int) processId).Threads)
                         {
-                            IntPtr hThread = OpenThread(0x0010, false, (uint)t.Id);
+                            IntPtr hThread = IntPtr.Zero;
+
+                            if (guna2ComboBox6.SelectedIndex == 0)
+                            {
+                                hThread = OpenThread(0x0010, false, (uint)t.Id);
+                            }
+                            else if (guna2ComboBox6.SelectedIndex == 1)
+                            {
+                                hThread = NtOpenThreadReplacement((int) processId, t.Id, 0x0010);
+                            }
 
                             if (hThread == IntPtr.Zero)
                             {
                                 continue;
                             }
 
-                            int status = NtQueueApcThread(
-                                hThread,
-                                loadLibraryAddress,
-                                allocatedMemoryAddress,
-                                IntPtr.Zero,
-                                IntPtr.Zero
-                            );
+                            int status = NtQueueApcThread(hThread, loadLibraryAddress, allocatedMemoryAddress, IntPtr.Zero, IntPtr.Zero);
 
-                            CloseHandle(hThread);
+                            if (guna2ComboBox6.SelectedIndex == 0)
+                            {
+                                CloseHandle(hThread);
+                            }
+                            else if (guna2ComboBox6.SelectedIndex == 1)
+                            {
+                                CloseHandleNt(hThread);
+                            }
                         }
                         break;
                     case 4:
                         foreach (ProcessThread t in Process.GetProcessById((int)processId).Threads)
                         {
-                            IntPtr hThread = OpenThread(0x1FFFFF, false, (uint)t.Id);
+                            IntPtr hThread = IntPtr.Zero;
+
+                            if (guna2ComboBox6.SelectedIndex == 0)
+                            {
+                                hThread = OpenThread(0x1FFFFF, false, (uint)t.Id);
+                            }
+                            else if (guna2ComboBox6.SelectedIndex == 1)
+                            {
+                                hThread = NtOpenThreadReplacement((int)processId, t.Id, 0x1FFFFF);
+                            }
 
                             if (hThread == IntPtr.Zero)
                             {
@@ -407,21 +570,43 @@ public partial class MainForm : MetroForm
                             }
 
                             int status = NtQueueApcThreadEx(hThread, IntPtr.Zero, loadLibraryAddress, allocatedMemoryAddress, IntPtr.Zero, IntPtr.Zero);
-                            CloseHandle(hThread);
+
+                            if (guna2ComboBox6.SelectedIndex == 0)
+                            {
+                                CloseHandle(hThread);
+                            }
+                            else if (guna2ComboBox6.SelectedIndex == 1)
+                            {
+                                CloseHandleNt(hThread);
+                            }
                         }
+
                         break;
                 }
 
-                CloseHandle(processHandle);                
+                if (guna2ComboBox6.SelectedIndex == 0)
+                {
+                    CloseHandle(processHandle);
+                }
+                else if (guna2ComboBox6.SelectedIndex == 1)
+                {
+                    CloseHandleNt(processHandle);
+                }
             }
             else if (guna2ComboBox3.SelectedIndex == 1)
             {
-                // TODO
+                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
+                new Thread(() => ManualMapDLL(processId, guna2TextBox2.Text)).Start();
+            }
+            else if (guna2ComboBox3.SelectedIndex == 2)
+            {
+                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
+                new Thread(() => ThreadHijack(processId, guna2TextBox2.Text)).Start();
             }
 
             MessageBox.Show("Succesfully injected!", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        catch (Exception ex)
+        catch
         {
             MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -429,23 +614,11 @@ public partial class MainForm : MetroForm
 
     private void guna2ComboBox3_SelectedIndexChanged(object sender, EventArgs e)
     {
-        guna2ComboBox4.Items.Clear();
-
-        if (guna2ComboBox3.SelectedIndex == 0)
-        {
-            guna2ComboBox4.Items.Add("WriteProcessMemory");
-            guna2ComboBox4.Items.Add("NtWriteVirtualMemory");
-            guna2ComboBox4.Items.Add("ZwWriteVirtualMemory");
-            guna2ComboBox4.Items.Add("NtCreateSection + NtMapViewOfSection");
-            guna2ComboBox4.Items.Add("CreateFileMapping + MapViewOfFile + NtMapViewOfSection");
-        }
-        else if (guna2ComboBox3.SelectedIndex == 1)
-        {
-            guna2ComboBox4.Items.Add("Normal Mapping");
-            guna2ComboBox4.Items.Add("Skip Init Routines");
-            guna2ComboBox4.Items.Add("Discard Headers");
-        }
-
-        guna2ComboBox4.SelectedIndex = 0;
+        bool enabled = guna2ComboBox3.SelectedIndex == 0;
+        guna2ComboBox1.Enabled = enabled;
+        guna2ComboBox2.Enabled = enabled;
+        guna2ComboBox4.Enabled = enabled;
+        guna2ComboBox5.Enabled = enabled;
+        guna2ComboBox6.Enabled = enabled;
     }
 }

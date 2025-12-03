@@ -32,6 +32,7 @@
             this.guna2ComboBox3 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.guna2ComboBox4 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.guna2ComboBox5 = new Guna.UI2.WinForms.Guna2ComboBox();
+            this.guna2ComboBox6 = new Guna.UI2.WinForms.Guna2ComboBox();
             this.SuspendLayout();
             // 
             // guna2ControlBox1
@@ -41,7 +42,7 @@
             this.guna2ControlBox1.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.guna2ControlBox1.HoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
             this.guna2ControlBox1.IconColor = System.Drawing.Color.White;
-            this.guna2ControlBox1.Location = new System.Drawing.Point(636, 14);
+            this.guna2ControlBox1.Location = new System.Drawing.Point(667, 14);
             this.guna2ControlBox1.Name = "guna2ControlBox1";
             this.guna2ControlBox1.Size = new System.Drawing.Size(45, 29);
             this.guna2ControlBox1.TabIndex = 0;
@@ -54,7 +55,7 @@
             this.guna2ControlBox2.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.guna2ControlBox2.HoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
             this.guna2ControlBox2.IconColor = System.Drawing.Color.White;
-            this.guna2ControlBox2.Location = new System.Drawing.Point(585, 14);
+            this.guna2ControlBox2.Location = new System.Drawing.Point(616, 14);
             this.guna2ControlBox2.Name = "guna2ControlBox2";
             this.guna2ControlBox2.Size = new System.Drawing.Size(45, 29);
             this.guna2ControlBox2.TabIndex = 1;
@@ -69,7 +70,7 @@
             this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(31, 116);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(639, 332);
+            this.listView1.Size = new System.Drawing.Size(679, 332);
             this.listView1.TabIndex = 2;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -97,7 +98,7 @@
             this.guna2Button1.ForeColor = System.Drawing.Color.White;
             this.guna2Button1.HoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
             this.guna2Button1.Image = ((System.Drawing.Image)(resources.GetObject("guna2Button1.Image")));
-            this.guna2Button1.Location = new System.Drawing.Point(505, 66);
+            this.guna2Button1.Location = new System.Drawing.Point(545, 66);
             this.guna2Button1.Name = "guna2Button1";
             this.guna2Button1.Size = new System.Drawing.Size(165, 36);
             this.guna2Button1.TabIndex = 3;
@@ -127,7 +128,7 @@
             this.guna2TextBox1.PlaceholderForeColor = System.Drawing.SystemColors.ControlDark;
             this.guna2TextBox1.PlaceholderText = "Process name or ID...";
             this.guna2TextBox1.SelectedText = "";
-            this.guna2TextBox1.Size = new System.Drawing.Size(468, 36);
+            this.guna2TextBox1.Size = new System.Drawing.Size(508, 36);
             this.guna2TextBox1.TabIndex = 4;
             this.guna2TextBox1.TextChanged += new System.EventHandler(this.guna2TextBox1_TextChanged);
             // 
@@ -154,7 +155,7 @@
             this.guna2TextBox2.PlaceholderForeColor = System.Drawing.SystemColors.ControlDark;
             this.guna2TextBox2.PlaceholderText = "DLL file path...";
             this.guna2TextBox2.SelectedText = "";
-            this.guna2TextBox2.Size = new System.Drawing.Size(468, 36);
+            this.guna2TextBox2.Size = new System.Drawing.Size(508, 36);
             this.guna2TextBox2.TabIndex = 5;
             // 
             // guna2Button2
@@ -170,7 +171,7 @@
             this.guna2Button2.ForeColor = System.Drawing.Color.White;
             this.guna2Button2.HoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
             this.guna2Button2.Image = ((System.Drawing.Image)(resources.GetObject("guna2Button2.Image")));
-            this.guna2Button2.Location = new System.Drawing.Point(505, 464);
+            this.guna2Button2.Location = new System.Drawing.Point(545, 464);
             this.guna2Button2.Name = "guna2Button2";
             this.guna2Button2.Size = new System.Drawing.Size(165, 36);
             this.guna2Button2.TabIndex = 6;
@@ -193,7 +194,7 @@
             this.guna2Button3.Image = ((System.Drawing.Image)(resources.GetObject("guna2Button3.Image")));
             this.guna2Button3.Location = new System.Drawing.Point(31, 621);
             this.guna2Button3.Name = "guna2Button3";
-            this.guna2Button3.Size = new System.Drawing.Size(468, 36);
+            this.guna2Button3.Size = new System.Drawing.Size(508, 36);
             this.guna2Button3.TabIndex = 7;
             this.guna2Button3.Text = "Inject DLL file into selected process";
             this.guna2Button3.Click += new System.EventHandler(this.guna2Button3_Click);
@@ -211,7 +212,7 @@
             this.guna2Button4.ForeColor = System.Drawing.Color.White;
             this.guna2Button4.HoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
             this.guna2Button4.Image = ((System.Drawing.Image)(resources.GetObject("guna2Button4.Image")));
-            this.guna2Button4.Location = new System.Drawing.Point(505, 621);
+            this.guna2Button4.Location = new System.Drawing.Point(545, 621);
             this.guna2Button4.Name = "guna2Button4";
             this.guna2Button4.Size = new System.Drawing.Size(165, 36);
             this.guna2Button4.TabIndex = 8;
@@ -240,9 +241,9 @@
             this.guna2ComboBox1.Items.AddRange(new object[] {
             "LoadLibraryA",
             "LoadLibraryW"});
-            this.guna2ComboBox1.Location = new System.Drawing.Point(262, 516);
+            this.guna2ComboBox1.Location = new System.Drawing.Point(191, 516);
             this.guna2ComboBox1.Name = "guna2ComboBox1";
-            this.guna2ComboBox1.Size = new System.Drawing.Size(199, 36);
+            this.guna2ComboBox1.Size = new System.Drawing.Size(123, 36);
             this.guna2ComboBox1.TabIndex = 9;
             // 
             // guna2ComboBox2
@@ -265,9 +266,9 @@
             "NtCreateThreadEx",
             "NtQueueApcThread",
             "NtQueueApcThreadEx"});
-            this.guna2ComboBox2.Location = new System.Drawing.Point(469, 516);
+            this.guna2ComboBox2.Location = new System.Drawing.Point(320, 516);
             this.guna2ComboBox2.Name = "guna2ComboBox2";
-            this.guna2ComboBox2.Size = new System.Drawing.Size(201, 36);
+            this.guna2ComboBox2.Size = new System.Drawing.Size(179, 36);
             this.guna2ComboBox2.TabIndex = 10;
             // 
             // guna2ComboBox3
@@ -285,11 +286,12 @@
             this.guna2ComboBox3.HoverState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
             this.guna2ComboBox3.ItemHeight = 30;
             this.guna2ComboBox3.Items.AddRange(new object[] {
-            "Standard Injection Method",
-            "Manual Mapping Method"});
+            "Standard Injection",
+            "Manual Mapping",
+            "Thread Hijacking"});
             this.guna2ComboBox3.Location = new System.Drawing.Point(31, 516);
             this.guna2ComboBox3.Name = "guna2ComboBox3";
-            this.guna2ComboBox3.Size = new System.Drawing.Size(225, 36);
+            this.guna2ComboBox3.Size = new System.Drawing.Size(154, 36);
             this.guna2ComboBox3.TabIndex = 11;
             this.guna2ComboBox3.SelectedIndexChanged += new System.EventHandler(this.guna2ComboBox3_SelectedIndexChanged);
             // 
@@ -338,10 +340,32 @@
             "NtCreateSection",
             "CreateFileMapping",
             "VirtualAlloc2"});
-            this.guna2ComboBox5.Location = new System.Drawing.Point(469, 569);
+            this.guna2ComboBox5.Location = new System.Drawing.Point(467, 569);
             this.guna2ComboBox5.Name = "guna2ComboBox5";
-            this.guna2ComboBox5.Size = new System.Drawing.Size(201, 36);
+            this.guna2ComboBox5.Size = new System.Drawing.Size(243, 36);
             this.guna2ComboBox5.TabIndex = 13;
+            // 
+            // guna2ComboBox6
+            // 
+            this.guna2ComboBox6.BackColor = System.Drawing.Color.Transparent;
+            this.guna2ComboBox6.BorderRadius = 2;
+            this.guna2ComboBox6.BorderThickness = 2;
+            this.guna2ComboBox6.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.guna2ComboBox6.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.guna2ComboBox6.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.guna2ComboBox6.FocusedColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
+            this.guna2ComboBox6.FocusedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(157)))), ((int)(((byte)(251)))));
+            this.guna2ComboBox6.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.guna2ComboBox6.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.guna2ComboBox6.HoverState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(184)))), ((int)(((byte)(252)))));
+            this.guna2ComboBox6.ItemHeight = 30;
+            this.guna2ComboBox6.Items.AddRange(new object[] {
+            "OpenProcess + CloseHandle",
+            "NtOpenProcess + NtClose"});
+            this.guna2ComboBox6.Location = new System.Drawing.Point(505, 516);
+            this.guna2ComboBox6.Name = "guna2ComboBox6";
+            this.guna2ComboBox6.Size = new System.Drawing.Size(205, 36);
+            this.guna2ComboBox6.TabIndex = 14;
             // 
             // MainForm
             // 
@@ -351,7 +375,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(695, 682);
+            this.ClientSize = new System.Drawing.Size(726, 682);
+            this.Controls.Add(this.guna2ComboBox6);
             this.Controls.Add(this.guna2ComboBox5);
             this.Controls.Add(this.guna2ComboBox4);
             this.Controls.Add(this.guna2ComboBox3);
@@ -396,4 +421,5 @@
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox3;
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox4;
     private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox5;
+    private Guna.UI2.WinForms.Guna2ComboBox guna2ComboBox6;
 }
