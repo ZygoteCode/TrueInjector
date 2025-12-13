@@ -72,7 +72,7 @@ public partial class MainForm : MetroForm
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool DuplicateHandle(IntPtr hSourceProcessHandle, IntPtr hSourceHandle, IntPtr hTargetProcessHandle, out IntPtr lpTargetHandle, uint dwDesiredAccess, bool bInheritHandle, uint dwOptions);
 
-    [DllImport("ntdll")]
+    [DllImport("ntdll.dll")]
     private static extern uint NtUnmapViewOfSection(IntPtr hProc, IntPtr baseAddr);
 
     [DllImport("kernelbase.dll", SetLastError = true)]
@@ -397,7 +397,7 @@ public partial class MainForm : MetroForm
                 else if (guna2ComboBox4.SelectedIndex == 4)
                 {
                     IntPtr hSection = CreateFileMapping(new IntPtr(-1), IntPtr.Zero, PAGE_READWRITE, 0, dllSize, null);
-                    IntPtr localView = MapViewOfFile( hSection, FILE_MAP_WRITE, 0, 0, (UIntPtr)dllSize );
+                    IntPtr localView = MapViewOfFile(hSection, FILE_MAP_WRITE, 0, 0, (UIntPtr)dllSize);
                     Marshal.Copy(dllBytes, 0, localView, dllBytes.Length);
 
                     long offset = 0;
@@ -602,6 +602,11 @@ public partial class MainForm : MetroForm
             {
                 uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 new Thread(() => ThreadHijack(processId, guna2TextBox2.Text)).Start();
+            }
+            else if (guna2ComboBox3.SelectedIndex == 3)
+            {
+                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
+                new Thread(() => NativeLoader.InjectLdrLoadDll((int)processId, guna2TextBox2.Text)).Start();
             }
 
             MessageBox.Show("Succesfully injected!", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Information);

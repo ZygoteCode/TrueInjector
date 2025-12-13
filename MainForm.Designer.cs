@@ -288,7 +288,8 @@
             this.guna2ComboBox3.Items.AddRange(new object[] {
             "Standard Injection",
             "Manual Mapping",
-            "Thread Hijacking"});
+            "Thread Hijacking",
+            "Native Loading"});
             this.guna2ComboBox3.Location = new System.Drawing.Point(31, 516);
             this.guna2ComboBox3.Name = "guna2ComboBox3";
             this.guna2ComboBox3.Size = new System.Drawing.Size(154, 36);
