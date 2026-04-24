@@ -149,12 +149,44 @@ public partial class MainForm : MetroForm
         checkerThread.Priority = ThreadPriority.Highest;
         checkerThread.Start();
 
+        Thread processStartupThread = new Thread(CheckForProcessStartup);
+        processStartupThread.Priority = ThreadPriority.Highest;
+        processStartupThread.Start();
+
         guna2ComboBox1.SelectedIndex = 1;
         guna2ComboBox2.SelectedIndex = 4;
         guna2ComboBox3.SelectedIndex = 0;
         guna2ComboBox4.SelectedIndex = 3;
         guna2ComboBox5.SelectedIndex = 2;
         guna2ComboBox6.SelectedIndex = 1;
+    }
+
+    public void CheckForProcessStartup()
+    {
+        while (true)
+        {
+            Thread.Sleep(10);
+
+            if (!guna2CheckBox1.Checked)
+            {
+                continue;
+            }
+
+            foreach (Process process in Process.GetProcesses())
+            {
+                try
+                {
+                    if (process.ProcessName.ToLower().Trim().Equals(guna2TextBox1.Text.ToLower().Trim()))
+                    {
+                        Inject((uint) process.Id);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+        }
     }
 
     public static void InitializeObjectAttributes(ref OBJECT_ATTRIBUTES attributes, UInt32 attributesValue)
@@ -311,19 +343,12 @@ public partial class MainForm : MetroForm
         Process.GetCurrentProcess().Kill();
     }
 
-    private void guna2Button3_Click(object sender, EventArgs e)
+    public void Inject(uint processId)
     {
-        if (!Utils.CanBeInjected(listView1, guna2TextBox2.Text))
-        {
-            MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-
         try
         {
             if (guna2ComboBox3.SelectedIndex == 0)
             {
-                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 IntPtr processHandle = IntPtr.Zero;
 
                 if (guna2ComboBox6.SelectedIndex == 0)
@@ -520,7 +545,7 @@ public partial class MainForm : MetroForm
                         NtCreateThreadEx(ref remoteThread, 0x1FFFFF, IntPtr.Zero, processHandle, loadLibraryAddress, allocatedMemoryAddress, false, 0, 0, 0, IntPtr.Zero);
                         break;
                     case 3:
-                        foreach (ProcessThread t in Process.GetProcessById((int) processId).Threads)
+                        foreach (ProcessThread t in Process.GetProcessById((int)processId).Threads)
                         {
                             IntPtr hThread = IntPtr.Zero;
 
@@ -530,7 +555,7 @@ public partial class MainForm : MetroForm
                             }
                             else if (guna2ComboBox6.SelectedIndex == 1)
                             {
-                                hThread = NtOpenThreadReplacement((int) processId, t.Id, 0x0010);
+                                hThread = NtOpenThreadReplacement((int)processId, t.Id, 0x0010);
                             }
 
                             if (hThread == IntPtr.Zero)
@@ -595,17 +620,14 @@ public partial class MainForm : MetroForm
             }
             else if (guna2ComboBox3.SelectedIndex == 1)
             {
-                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 new Thread(() => ManualMapDLL(processId, guna2TextBox2.Text)).Start();
             }
             else if (guna2ComboBox3.SelectedIndex == 2)
             {
-                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 new Thread(() => ThreadHijack(processId, guna2TextBox2.Text)).Start();
             }
             else if (guna2ComboBox3.SelectedIndex == 3)
             {
-                uint processId = uint.Parse(listView1.SelectedItems[0].Text);
                 new Thread(() => NativeLoader.InjectLdrLoadDll((int)processId, guna2TextBox2.Text)).Start();
             }
 
@@ -614,6 +636,25 @@ public partial class MainForm : MetroForm
         catch
         {
             MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+        }
+    }
+
+    private void guna2Button3_Click(object sender, EventArgs e)
+    {
+        if (!Utils.CanBeInjected(listView1, guna2TextBox2.Text))
+        {
+            MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        try
+        {
+            Inject(uint.Parse(listView1.SelectedItems[0].Text));
+        }
+        catch
+        {
+
         }
     }
 
@@ -625,5 +666,10 @@ public partial class MainForm : MetroForm
         guna2ComboBox4.Enabled = enabled;
         guna2ComboBox5.Enabled = enabled;
         guna2ComboBox6.Enabled = enabled;
+    }
+
+    private void guna2CheckBox1_CheckedChanged(object sender, EventArgs e)
+    {
+        guna2TextBox1.ReadOnly = guna2CheckBox1.Checked;
     }
 }
