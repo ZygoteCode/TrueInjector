@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -134,6 +135,9 @@ public partial class MainForm : MetroForm
     private const uint STATUS_SUCCESS = 0x00000000;
 
     private List<InjectorProcess> _injectorProcesses;
+    private ProtoRandom.ProtoRandom _random;
+    string rootDir = Environment.GetFolderPath(Environment.SpecialFolder.System).Substring(0, 1) + ":";
+    char[] characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
 
     public MainForm()
     {
@@ -159,6 +163,8 @@ public partial class MainForm : MetroForm
         guna2ComboBox4.SelectedIndex = 3;
         guna2ComboBox5.SelectedIndex = 2;
         guna2ComboBox6.SelectedIndex = 1;
+
+        _random = new ProtoRandom.ProtoRandom(2);
     }
 
     public void CheckForProcessStartup()
@@ -178,7 +184,12 @@ public partial class MainForm : MetroForm
                 {
                     if (process.ProcessName.ToLower().Trim().Equals(guna2TextBox1.Text.ToLower().Trim()))
                     {
-                        Inject((uint) process.Id);
+                        if (Utils.CanBeInjected(process.Id, guna2TextBox2.Text))
+                        {
+                            Inject((uint)process.Id, false);
+                            Process.GetCurrentProcess().Kill();
+                            return;
+                        }
                     }
                 }
                 catch
@@ -264,7 +275,7 @@ public partial class MainForm : MetroForm
             try
             {
                 Thread.Sleep(100);
-                bool canBeInjected = Utils.CanBeInjected(listView1, guna2TextBox2.Text);
+                bool canBeInjected = Utils.CanBeInjected2(listView1, guna2TextBox2.Text);
 
                 guna2Button3.Invoke(new Action(() =>
                 {
@@ -343,7 +354,71 @@ public partial class MainForm : MetroForm
         Process.GetCurrentProcess().Kill();
     }
 
-    public void Inject(uint processId)
+    public int FindBytes(byte[] src, byte[] find)
+    {
+        int index = -1;
+        int matchIndex = 0;
+
+        for (int i = 0; i < src.Length; i++)
+        {
+            if (src[i] == find[matchIndex])
+            {
+                if (matchIndex == (find.Length - 1))
+                {
+                    index = i - matchIndex;
+                    break;
+                }
+
+                matchIndex++;
+            }
+            else if (src[i] == find[0])
+            {
+                matchIndex = 1;
+            }
+            else
+            {
+                matchIndex = 0;
+            }
+        }
+
+        return index;
+    }
+
+    public byte[] ReplaceBytes(byte[] src, byte[] search, byte[] repl)
+    {
+        byte[] dst = null;
+        int index = FindBytes(src, search);
+
+        if (index >= 0)
+        {
+            dst = new byte[src.Length - search.Length + repl.Length];
+
+            Buffer.BlockCopy(src, 0, dst, 0, index);
+            Buffer.BlockCopy(repl, 0, dst, index, repl.Length);
+            Buffer.BlockCopy(src, index + search.Length, dst, index + repl.Length, src.Length - (index + search.Length));
+        }
+
+        return dst;
+    }
+
+    public static byte[] Combine(byte[] first, byte[] second)
+    {
+        byte[] ret = new byte[first.Length + second.Length];
+
+        Buffer.BlockCopy(first, 0, ret, 0, first.Length);
+        Buffer.BlockCopy(second, 0, ret, first.Length, second.Length);
+
+        return ret;
+    }
+
+    public static void HideFile(string file)
+    {
+        System.IO.File.SetAttributes(file, System.IO.FileAttributes.Hidden);
+        System.IO.FileInfo info = new System.IO.FileInfo(file);
+        info.IsReadOnly = true;
+    }
+
+    public void Inject(uint processId, bool showMessageBox)
     {
         try
         {
@@ -361,6 +436,35 @@ public partial class MainForm : MetroForm
                 }
 
                 string dllPath = guna2TextBox2.Text;
+
+                if (guna2CheckBox2.Checked)
+                {
+                    byte[] dllContent = File.ReadAllBytes(dllPath);
+
+                    byte[] bytesToReplace = Encoding.UTF8.GetBytes("This program cannot be run in DOS mode.");
+                    dllContent = ReplaceBytes(dllContent, bytesToReplace, _random.GetRandomBytes(bytesToReplace.Length));
+
+                    if (!Directory.Exists(rootDir + "\\Temp"))
+                    {
+                        Directory.CreateDirectory(rootDir + "\\Temp");
+                    }
+
+                    string folderName = _random.GetRandomString(characters, _random.GetRandomInt32(12, 64));
+
+                    if (Directory.Exists(rootDir + "\\Temp\\" + folderName))
+                    {
+                        Directory.Delete(rootDir + "\\Temp\\" + folderName);
+                    }
+
+                    Directory.CreateDirectory(rootDir + "\\Temp\\" + folderName);
+                    dllPath = rootDir + "\\Temp\\" + folderName + "\\" + _random.GetRandomString(characters, _random.GetRandomInt32(6, 32)) + ".dll";
+                    File.WriteAllBytes(dllPath, dllContent);
+                }
+
+                if (guna2CheckBox4.Checked)
+                {
+                    HideFile(dllPath);
+                }
 
                 byte[] dllBytes = guna2ComboBox1.SelectedIndex == 0 ?
                     Encoding.ASCII.GetBytes(dllPath + "\0") :
@@ -631,18 +735,23 @@ public partial class MainForm : MetroForm
                 new Thread(() => NativeLoader.InjectLdrLoadDll((int)processId, guna2TextBox2.Text)).Start();
             }
 
-            MessageBox.Show("Succesfully injected!", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (showMessageBox)
+            {
+                MessageBox.Show("Succesfully injected!", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
         catch
         {
-            MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
+            if (showMessageBox)
+            {
+                MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 
     private void guna2Button3_Click(object sender, EventArgs e)
     {
-        if (!Utils.CanBeInjected(listView1, guna2TextBox2.Text))
+        if (!Utils.CanBeInjected2(listView1, guna2TextBox2.Text))
         {
             MessageBox.Show("An error occurred.", "TrueInjector", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
@@ -650,7 +759,7 @@ public partial class MainForm : MetroForm
 
         try
         {
-            Inject(uint.Parse(listView1.SelectedItems[0].Text));
+            Inject(uint.Parse(listView1.SelectedItems[0].Text), true);
         }
         catch
         {

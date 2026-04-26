@@ -11,7 +11,58 @@ public class Utils
     [DllImport("kernel32.dll")]
     private static extern bool IsWow64Process(IntPtr hProcess, out bool wow64Process);
 
-    public static bool CanBeInjected(ListView listView, string dllPath)
+    public static bool CanBeInjected(int processId, string dllPath)
+    {
+        try
+        {
+            if (!File.Exists(dllPath))
+            {
+                return false;
+            }
+
+            if (!Path.GetExtension(dllPath).Equals(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var process = Process.GetProcessById(processId);
+
+            if (process == null)
+            {
+                return false;
+            }
+
+            var pe = new PeFile(dllPath);
+
+            if (pe.ImageNtHeaders.OptionalHeader.AddressOfEntryPoint == 0)
+            {
+                return false;
+            }
+
+            var dllArch = pe.ImageNtHeaders.FileHeader.Machine;
+
+            bool processIs64 = Environment.Is64BitOperatingSystem &&
+                               IsProcess64Bit(process);
+
+            if (dllArch == MachineType.Amd64 && !processIs64)
+            {
+                return false;
+            }
+
+            if (dllArch == MachineType.I386 && processIs64)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool CanBeInjected2(ListView listView, string dllPath)
     {
         try
         {
