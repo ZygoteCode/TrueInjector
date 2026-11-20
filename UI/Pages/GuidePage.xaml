@@ -1,0 +1,251 @@
+<UserControl x:Class="TrueInjector.UI.Pages.GuidePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <Style x:Key="StepNumber" TargetType="Border">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="Background" Value="{DynamicResource B.AccentDim}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="StepNumberText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource B.AccentBright}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="GuideCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+        <Style x:Key="FeatureTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource B.TextPrimary}" />
+        </Style>
+        <Style x:Key="FeatureBody" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource B.TextSecondary}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="19" />
+        </Style>
+        <Style x:Key="KeyCap" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource B.Rail}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource B.Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Margin" Value="0,2,6,2" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="2,0,0,18">
+            <TextBlock Style="{StaticResource PageHeading}" Text="Beginner's guide" />
+            <TextBlock Style="{StaticResource PageSubheading}" Margin="0,4,0,0"
+                       Text="Every feature explained, step by step — from zero to a clean injection." />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="880" HorizontalAlignment="Left">
+
+                <!-- What is a DLL injection -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="What is DLL injection?" />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="A DLL is a library of code that programs load when they need it. DLL injection asks a running program to load a DLL you wrote, so your code runs inside that process with access to everything the process can see. It is the standard technique used for mod menus, overlays, trainers, telemetry shims and debugging tools. TrueInjector automates the whole choreography: pick a process, pick a DLL, fire." />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="Requirements: a 64-bit DLL for a 64-bit process (TrueInjector checks this for you) and enough privileges to touch the target. Notepad is perfect for your very first test." />
+                    </StackPanel>
+                </Border>
+
+                <!-- First injection walkthrough -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Your first injection — step by step" />
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource StepNumber}"><TextBlock Style="{StaticResource StepNumberText}" Text="1" /></Border>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource FeatureBody}" VerticalAlignment="Top" Margin="0,4,0,14"
+                                       Text="Open the Inject page. The live list on the left shows every running process, already sorted by name. Icons come straight from each program's executable." />
+
+                            <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource StepNumber}"><TextBlock Style="{StaticResource StepNumberText}" Text="2" /></Border>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource FeatureBody}" VerticalAlignment="Top" Margin="0,4,0,14"
+                                       Text="Find your target. Type part of the name into the filter box — 'note' finds Notepad instantly — or search by PID number. Click the row once so it highlights." />
+
+                            <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource StepNumber}"><TextBlock Style="{StaticResource StepNumberText}" Text="3" /></Border>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource FeatureBody}" VerticalAlignment="Top" Margin="0,4,0,14"
+                                       Text="Load your payload. Drag the .dll file anywhere onto the right panel, click the panel itself, or press Browse…. TrueInjector reads its header and tells you the architecture, size and modification date." />
+
+                            <Border Grid.Row="3" Grid.Column="0" Style="{StaticResource StepNumber}"><TextBlock Style="{StaticResource StepNumberText}" Text="4" /></Border>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource FeatureBody}" VerticalAlignment="Top" Margin="0,4,0,14"
+                                       Text="Watch the readiness hint under the Inject button. It walks you through whatever is missing — no process, no file, wrong bitness — and turns green when everything checks out." />
+
+                                <Border Grid.Row="4" Grid.Column="0" Style="{StaticResource StepNumber}"><TextBlock Style="{StaticResource StepNumberText}" Text="5" /></Border>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Style="{StaticResource FeatureBody}" VerticalAlignment="Top" Margin="0,4,0,0"
+                                       Text="Press Inject payload. A toast confirms success; the Activity page records every call. That is genuinely all there is to it." />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Choosing a method -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Which injection method should I pick?" />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="Four methods ship with TrueInjector. If you are unsure, the default (Standard, outlined in blue) is the right starting point — it is fast, reliable and works with anything." />
+                        <Grid Margin="0,12,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Style="{StaticResource InnerCard}" Margin="0,0,8,8">
+                                <StackPanel>
+                                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource B.AccentBright}" Text="STANDARD" />
+                                    <TextBlock Style="{StaticResource FeatureBody}" Margin="0,5,0,0"
+                                               Text="Uses LoadLibrary, the same mechanism every program uses to load libraries. Simple, stable, compatible everywhere. Slightly easier for anti-cheat to notice." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource InnerCard}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="MANUAL MAPPING" />
+                                    <TextBlock Style="{StaticResource FeatureBody}" Margin="0,5,0,0"
+                                               Text="Copies the DLL's bytes and rebuilds it in memory by hand — the DLL never exists on the target's module list. Needs ManualMapper.dll beside the app." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource InnerCard}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="THREAD HIJACKING" />
+                                    <TextBlock Style="{StaticResource FeatureBody}" Margin="0,5,0,0"
+                                               Text="Instead of creating a new thread (a visible event), borrows one the process already has. Quieter, slightly riskier. Needs ThreadHijacker.dll." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource InnerCard}">
+                                <StackPanel>
+                                    <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="NATIVE LOADING" />
+                                    <TextBlock Style="{StaticResource FeatureBody}" Margin="0,5,0,0"
+                                               Text="Drops down to ntdll's LdrLoadDll with a tiny hand-written stub. A middle ground: no kernel32 thread creation, still uses the system loader." />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Tuning the pipeline -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Understanding the pipeline knobs" />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="With the Standard method, the Techniques page lets you assemble the loader chain piece by piece. A pipeline is read left to right: acquire a handle, carve out memory, write the path, kick off execution, clean up." />
+                        <StackPanel Margin="0,10,0,0">
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="Memory allocation — where the path lives" />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,10"
+                                       Text="VirtualAllocEx is the textbook call. The Nt variants do the same through lower-level doors, which sometimes matters with older security products. Sections and file mappings pre-fill the remote memory during the write phase, so the allocation picker greys out to show it is handled." />
+
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="Memory write — how the path arrives" />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,10"
+                                       Text="WriteProcessMemory is the everyday choice. The two section-transfer modes are subtly different: they share the buffer between processes instead of copying, which avoids write-call monitoring entirely." />
+
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="Execution — what kicks it off" />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,10"
+                                       Text="CreateRemoteThread is loud but honest. The APC queue modes attach the load request to the process's own threads — the Ex variant reserves a dedicated APC slot, the gentlest ride available." />
+
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="Handles — who opens the door" />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,0"
+                                       Text="kernel32 is friendly, ntdll is direct. Pick one pair and stick with it; the resolved pipeline box at the bottom always shows the exact chain you assembled, ready to copy into notes." />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Watchdog -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="The Watchdog: auto-fire on process spawn" />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="Some targets only exist briefly, or you want the injection ready before a game finishes loading. The Watchdog flips the problem around: you name a process, arm the switch, and TrueInjector patrols the system twice a second. The instant your target appears — validated for the right bitness — it receives the payload, and TrueInjector exits gracefully." />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="Load the payload first: the watchdog always fires with the DLL currently selected on the Inject page. The two extra toggles (Randomize, Hide) apply per shot exactly as they do manually." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Cloaking -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Payload cloaking — Randomize and Hide" />
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,8,0,0"
+                                   Text="The two small toggles next to Browse… control what lands on disk. Randomize copies your DLL into a freshly-named folder under the system drive, overwrites the ancient 'This program cannot be run in DOS mode' stub with random bytes, so every drop looks different. Hide marks the copy hidden and read-only. Both are cosmetic — your original file is never modified." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Keyboard -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Keyboard shortcuts &amp; daily tips" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Border Style="{StaticResource KeyCap}"><TextBlock FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{DynamicResource B.TextPrimary}" Text="Ctrl+I" /></Border>
+                            <TextBlock Style="{StaticResource FeatureBody}" Text="Fire the injection with the current target and payload." />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource KeyCap}"><TextBlock FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{DynamicResource B.TextPrimary}" Text="Ctrl+R" /></Border>
+                            <TextBlock Style="{StaticResource FeatureBody}" Text="Force an immediate process rescan (the list also refreshes itself every few seconds)." />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource FeatureBody}" Margin="0,10,0,0"
+                                   Text="Two habits worth keeping: check the Activity page first when something fails — the exact failing call is always logged — and remember that injecting into an admin-only process needs TrueInjector started as administrator too." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Troubleshooting -->
+                <Border Style="{StaticResource GuideCard}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource FeatureTitle}" Text="Troubleshooting cheat-sheet" />
+                        <StackPanel Margin="0,10,0,0">
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text="'Unable to open the target process'" />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,10"
+                                       Text="The target runs elevated or protected. Restart TrueInjector as administrator, or pick a lower-integrity target." />
+
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text='Architecture mismatch warnings' />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,10"
+                                       Text="A 32-bit DLL can only enter a 32-bit process and vice versa. Rebuild the payload for the target's bitness — the badge next to the filename shows what you currently have." />
+
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource B.TextPrimary}" Text='Missing ManualMapper.dll / ThreadHijacker.dll' />
+                            <TextBlock Style="{StaticResource FeatureBody}" Margin="0,4,0,0"
+                                       Text="Those methods load the native helpers on demand. Build them from the bundled C++ projects or copy the released DLLs next to TrueInjector.exe. Standard and Native loading need nothing extra." />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,174 @@
+<UserControl x:Class="TrueInjector.UI.Pages.TechniquesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:TrueInjector.Models">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="2,0,0,18">
+            <TextBlock Style="{StaticResource PageHeading}" Text="Injection techniques" />
+            <TextBlock Style="{StaticResource PageSubheading}" Margin="0,4,0,0"
+                       Text="Every layer of the loader chain is yours to choose." />
+        </StackPanel>
+
+        <UniformGrid Grid.Row="1" Columns="4" Margin="2,0,2,0">
+            <RadioButton GroupName="Method" Style="{StaticResource MethodCard}" Margin="0,0,8,0"
+                         Tag="{x:Static models:InjectionMethod.Standard}" IsChecked="True" Checked="MethodChecked">
+                <StackPanel>
+                    <TextBlock Text="Standard" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource B.TextPrimary}" />
+                    <TextBlock Text="Classic LoadLibrary chain" FontSize="11" Foreground="{DynamicResource B.TextTertiary}" Margin="0,2,0,0" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton GroupName="Method" Style="{StaticResource MethodCard}" Margin="0,0,8,0"
+                         Tag="{x:Static models:InjectionMethod.ManualMapping}" Checked="MethodChecked">
+                <StackPanel>
+                    <TextBlock Text="Manual mapping" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource B.TextPrimary}" />
+                    <TextBlock Text="No LoadLibrary involved" FontSize="11" Foreground="{DynamicResource B.TextTertiary}" Margin="0,2,0,0" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton GroupName="Method" Style="{StaticResource MethodCard}" Margin="0,0,8,0"
+                         Tag="{x:Static models:InjectionMethod.ThreadHijacking}" Checked="MethodChecked">
+                <StackPanel>
+                    <TextBlock Text="Thread hijacking" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource B.TextPrimary}" />
+                    <TextBlock Text="Reuse a living thread" FontSize="11" Foreground="{DynamicResource B.TextTertiary}" Margin="0,2,0,0" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton GroupName="Method" Style="{StaticResource MethodCard}"
+                         Tag="{x:Static models:InjectionMethod.NativeLoading}" Checked="MethodChecked">
+                <StackPanel>
+                    <TextBlock Text="Native loading" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource B.TextPrimary}" />
+                    <TextBlock Text="ntdll LdrLoadDll stub" FontSize="11" Foreground="{DynamicResource B.TextTertiary}" Margin="0,2,0,0" />
+                </StackPanel>
+            </RadioButton>
+        </UniformGrid>
+
+        <!-- ======== Standard pipeline tuning ======== -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,16,0,0"
+                Visibility="{Binding Settings.IsStandardPipeline, Converter={StaticResource BoolToVis}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,4,0,14">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="PAYLOAD PATH FLAVOR" />
+                        <ComboBox Style="{StaticResource TechCombo}"
+                                  ItemsSource="{Binding LoadLibraryChoices}"
+                                  SelectedItem="{Binding LoadLibraryChoice, Mode=TwoWay}"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,4,0,14">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="REMOTE EXECUTION" />
+                        <ComboBox Style="{StaticResource TechCombo}"
+                                  ItemsSource="{Binding ExecutionChoices}"
+                                  SelectedItem="{Binding ExecutionChoice, Mode=TwoWay}"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,4,0,14">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="MEMORY WRITE" />
+                        <ComboBox Style="{StaticResource TechCombo}"
+                                  ItemsSource="{Binding WriteChoices}"
+                                  SelectedItem="{Binding WriteChoice, Mode=TwoWay}"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,4,0,14">
+                        <StackPanel.Resources>
+                            <Style x:Key="AllocationCombo" TargetType="ComboBox" BasedOn="{StaticResource TechCombo}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AllocationLocked}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Resources>
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="MEMORY ALLOCATION" />
+                        <TextBlock FontSize="10.5" Foreground="{DynamicResource B.TextTertiary}" Margin="0,0,0,6"
+                                   Text="managed by the write method while a section transfer is selected"
+                                   Visibility="{Binding AllocationLocked, Converter={StaticResource BoolToVis}}" />
+                        <ComboBox Style="{StaticResource AllocationCombo}"
+                                  ItemsSource="{Binding AllocationChoices}"
+                                  SelectedItem="{Binding AllocationChoice, Mode=TwoWay}"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,4,0,0">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="HANDLE ACQUISITION" />
+                        <ComboBox Style="{StaticResource TechCombo}"
+                                  ItemsSource="{Binding HandleChoices}"
+                                  SelectedItem="{Binding HandlesChoice, Mode=TwoWay}"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Grid.Column="2" Style="{StaticResource InnerCard}" Margin="0,10,0,0" VerticalAlignment="Bottom">
+                        <StackPanel>
+                            <TextBlock Text="RESOLVED PIPELINE" Style="{StaticResource FieldLabel}" Foreground="{DynamicResource B.AccentBright}" />
+                            <TextBlock Text="{Binding PipelinePreview, Mode=OneWay}"
+                                       Style="{StaticResource MonoText}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ======== Companion-module methods ======== -->
+        <Border Grid.Row="2" Margin="0,16,0,0" Padding="24">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Settings.IsStandardPipeline}" Value="False">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <StackPanel VerticalAlignment="Top">
+                <TextBlock FontFamily="{StaticResource Font.Display}"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource B.TextPrimary}"
+                           Text="{Binding Settings.MethodHeader, Mode=OneWay}" />
+                <TextBlock Foreground="{DynamicResource B.TextSecondary}"
+                           FontSize="12.5"
+                           Margin="0,8,0,0"
+                           TextWrapping="Wrap"
+                           Text="{Binding MethodDescription, Mode=OneWay}" />
+
+                <Border Style="{StaticResource InnerCard}" Margin="0,16,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IcInfo}" Style="{StaticResource SmallGlyph}" Stroke="{DynamicResource B.Accent}" />
+                        <TextBlock FontSize="11.5" Foreground="{DynamicResource B.TextSecondary}" Margin="8,0,0,0"
+                                   Text="Place the module DLL next to TrueInjector.exe — it is loaded on demand, exactly as before."
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
